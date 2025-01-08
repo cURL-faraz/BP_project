@@ -8,3 +8,7 @@ custom_theme = Theme({"success": "green", "error": "red"})
 console = Console(theme=custom_theme)
 
 FILE_NAME = "users.json"
+
+def save_to_file(data):
+    with open(FILE_NAME, "w") as file:
+        json.dump(data, file)
