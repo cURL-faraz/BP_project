@@ -18,4 +18,9 @@ def load_from_file():
         with open(FILE_NAME, "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}      
+        return {}
+
+def hasher(password):
+    SALT = bcrypt.gensalt(8)
+    hexpass = bcrypt.hashpw(password.encode(), SALT).hex()
+    return hexpass     
