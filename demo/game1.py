@@ -1,96 +1,78 @@
 from rich.console import Console
 from rich.theme import Theme
-from rich.table import Table
-import time
-
-custom_theme = Theme({"success": "green", "error": "red"})
+custom_theme = Theme({})
 console = Console(theme=custom_theme)
 wall_a = []
 wall_o = []
-for i in range(10):
+for i in range(9):
     l = []
-    for j in range(10):
-        l.append("l")
-    wall_a.append(l)
-    wall_o.append(l)
+    for j in range(9):
+        l.append("Available")
+    wall_a.append(l.copy())
+    wall_o.append(l.copy())
+red_position=[1,5]
+blue_position=[9,5]
+def block_wall_a(wall_a : list,x_center,y_center):
+    if x_center <= 9 and y_center <= 9 :
+        wall_a[x_center-1][y_center-1]="Blocked";wall_a[x_center][y_center-1]="Blocked"
+        return(wall_a)
+def block_wall_o(wall_o : list,x_center,y_center):
+    if x_center <= 9 and y_center <= 9 :
+        wall_o[x_center-1][y_center-1]="Blocked";wall_o[x_center-1][y_center]="Blocked"
+        return(wall_o)
 
-def generate_table(wall_a, wall_o):
-    s = ""
-    for i in range(1, 18):
-        ss = ""
-        if i % 2 != 0:
-            for n in range(9):
-                if wall_a[i // 2][n] == "A":
-                    if n!=8:
-                        ss += "   [success]|[/success]"
-                    else:
-                        ss+="   "
-                else:
-                    if n!=8:
-                        ss += "   [error]|[/error]"
-                    else:
-                        ss +="   "
-        else:  # Even rows
-            for n in range(9):
-                if wall_o[(i - 1) // 2][n] == "A":
-                    if n!=8:
-                        ss += "[success]---[/success]*"
-                    else:
-                        ss += "[success]---[/success]"
-                else:
-                    if n!=8:
-                        ss += "[error]---[/error]*"
-                    else:
-                        ss += "[error]---[/error]"
-        s += ss + "\n"
-    return s
-
-console.print(generate_table(wall_a, wall_o))
-from rich.console import Console
-from rich.theme import Theme
-from rich.table import Table
-import time
-
-custom_theme = Theme({"success": "green", "error": "red"})
-console = Console(theme=custom_theme)
-wall_a = []
-wall_o = []
-for i in range(10):
-    l = []
-    for j in range(10):
-        l.append("l")
-    wall_a.append(l)
-    wall_o.append(l)
-
-def generate_table(wall_a, wall_o):
+def generate_table(wall_a, wall_o,red_position,blue_position):
     s = ""
     for i in range(1, 18):  
         ss = ""
-        if i % 2 != 0:  
+        if i % 2 != 0: 
             for n in range(9):
-                if wall_a[i // 2][n] == "A":
-                    if n!=8:
-                        ss += "   [success]|[/success]"
+                if ((i+1)/2)==red_position[0] and n+1==red_position[1]:
+                    if wall_a[(i-1) // 2][n] == "Available":
+                        if n!=8:
+                            ss += " [red]O[/red] [yellow2]|[/yellow2]"
+                        else:
+                            ss+=" [red]O[/red] "
                     else:
-                        ss+="   "
+                        if n!=8:
+                            ss += " [red]O[/red] [orange3]|[/orange3]"
+                        else:
+                            ss +=" [red]O[/red] "
+                elif ((i+1)/2)==blue_position[0] and n+1==blue_position[1]:
+                    if wall_a[(i-1) // 2][n] == "Available":
+                        if n!=8:
+                            ss += " [blue]O[/blue] [yellow2]|[/yellow2]"
+                        else:
+                            ss+=" [blue]O[/blue] "
+                    else:
+                        if n!=8:
+                            ss += " [blue]O[/blue] [orange3]|[/orange3]"
+                        else:
+                            ss +=" [blue]O[/blue] "
                 else:
-                    if n!=8:
-                        ss += "   [error]|[/error]"
+                    if wall_a[(i-1) // 2][n] == "Available":
+                        if n!=8:
+                            ss += "   [yellow2]|[/yellow2]"
+                        else:
+                            ss+="   "
                     else:
-                        ss +="   "
-        else:  # Even rows
+                        if n!=8:
+                            ss += "   [orange3]|[/orange3]"
+                        else:
+                            ss +="   "
+        else: 
             for n in range(9):
-                if wall_o[(i - 1) // 2][n] == "A":
+                if wall_o[(i - 1) // 2][n] == "Available":
                     if n!=8:  
-                        ss += "[success]---[/success]*"
+                        ss += "[yellow2]——-[/yellow2]o"
                     else:
-                        ss += "[success]---[/success]"
+                        ss += "[yellow2]——-[/yellow2]"
                 else:
                     if n!=8:
-                        ss += "[error]---[/error]*"
+                        ss += "[orange3]——-[/orange3]o"
                     else:
-                        ss += "[error]---[/error]"  
+                        ss += "[orange3]——-[/orange3]"  
         s += ss + "\n"
     return s
+console.print(generate_table(wall_a, wall_o,red_position,blue_position))
 
-console.print(generate_table(wall_a, wall_o))
