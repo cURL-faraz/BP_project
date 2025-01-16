@@ -38,22 +38,21 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                     while True:
                         c=0
                         w=list(input("enter centr of the wall and its state(enter horizontal or vertical),such as (1,2,v): ").split(","))
-                        if w[-1]=="h":
-                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"h"):
+                        if w[-1]=="v":
+                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"v"):
                                 block_wall_o(wall_o,int(w[0]),int(w[1]))
-                                clear()
+                                # clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
                                 break
                             else:
                                 console.print("invalid wall",style="error")
-                                print(ne)
                                 break
-                        if w[-1]=="v":
-                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"v"):
+                        if w[-1]=="h":
+                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"h"):
                                 block_wall_a(wall_a,int(w[0]),int(w[1]))
-                                clear()
+                                # clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
@@ -68,7 +67,6 @@ def run (red,blue,wall_a,wall_o,neighborhood):
         if x%2!=0:
             while True:
                 b=0
-                c=0
                 a=input("player2: ")
                 if a=='q':
                     r=False
@@ -91,11 +89,12 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                         break
                 if a=="w":
                     while True:
+                        c=0
                         w=list(input("enter centr of the wall and its state(enter horizontal or vertical),such as (1,2,v): ").split(","))
-                        if w[-1]=="h":
-                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"h"):
+                        if w[-1]=="v":
+                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"v"):
                                 block_wall_o(wall_o,int(w[0]),int(w[1]))
-                                clear()
+                                # clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
@@ -103,10 +102,10 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                             else:
                                 console.print("invalid wall",style="error")
                                 break
-                        if w[-1]=="v":
-                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"v"):
+                        if w[-1]=="h":
+                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"h"):
                                 block_wall_a(wall_a,int(w[0]),int(w[1]))
-                                clear()
+                                # clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
@@ -235,7 +234,10 @@ def move(s,k,move,wall_a,wall_o):
         else:
             return(s)
 def remove_neighborhood(neighborhood,x_center,y_center,state):
-    if state=="h":
+    if state=="v":
+        print((x_center,y_center))
+        print(neighborhood[(x_center,y_center)])
+        print((x_center+1,y_center))
         if (x_center+1,y_center) in neighborhood[(x_center,y_center)]:
             neighborhood[(x_center,y_center)].remove((x_center+1,y_center))
         if (x_center,y_center) in neighborhood[(x_center+1,y_center)]:    
@@ -244,7 +246,7 @@ def remove_neighborhood(neighborhood,x_center,y_center,state):
             neighborhood[(x_center,y_center+1)].remove((x_center+1,y_center+1))
         if (x_center,y_center+1) in neighborhood[(x_center+1,y_center+1)]:
             neighborhood[(x_center+1,y_center+1)].remove((x_center,y_center+1))
-    if state=="v":
+    if state=="h":
         if (x_center,y_center+1) in neighborhood[(x_center,y_center)]:
             neighborhood[(x_center,y_center)].remove((x_center,y_center+1))
         if (x_center,y_center) in neighborhood[(x_center,y_center+1)]:
@@ -270,61 +272,47 @@ def checkwall(neighborhood,enemycolor,positon,x_center,y_center,state):
         visited = set()
         for i in range(1,10):
             if dfs(positon,(9,i),visited,neighborhood_c):
-                neighborhood=neighborhood_c.copy()
+                remove_neighborhood(neighborhood,x_center,y_center,state)
                 return True
         return False
     if enemycolor=="blue":
         visited = set()
         for i in range(1,10):
             if dfs(positon,(1,i),visited,neighborhood_c):
-                neighborhood=neighborhood_c.copy()
+                neighborhood=neighborhood_c
                 return True
         return False
 def generate_table(wall_a, wall_o,red,blue):
     s = ""
-    s+="[dark_green]        1   2   3   4   5   6   7   8   [/dark_green]"+"\n" +"\n"
-
     for i in range(1, 18):  
         ss = ""
         if i % 2 != 0: 
             for n in range(9):
                 if ((i+1)/2)==red[0] and n+1==red[1]:
                     if wall_a[(i-1) // 2][n] == "Available":
-                        if n==0:
-                            ss += "      [red]O[/red] [yellow2]|[/yellow2]"
-                        elif n!=8:
+                        if n!=8:
                             ss += " [red]O[/red] [yellow2]|[/yellow2]"
                         else:
                             ss+=" [red]O[/red] "
                     else:
-                        if n==0:
-                            ss += "      [red]O[/red] [orange3]|[/orange3]"
-                        elif n!=8:
+                        if n!=8:
                             ss += " [red]O[/red] [orange3]|[/orange3]"
                         else:
                             ss +=" [red]O[/red] "
                 elif ((i+1)/2)==blue[0] and n+1==blue[1]:
                     if wall_a[(i-1) // 2][n] == "Available":
-                        if n==0:
-                            ss += "      [blue]O[/blue] [yellow2]|[/yellow2]"
-                        elif n!=8:
+                        if n!=8:
                             ss += " [blue]O[/blue] [yellow2]|[/yellow2]"
                         else:
                             ss+=" [blue]O[/blue] "
                     else:
-                        if n==0:
-                            ss += "      [blue]O[/blue] [orange3]|[/orange3]"
-
-                        elif n!=8:
+                        if n!=8:
                             ss += " [blue]O[/blue] [orange3]|[/orange3]"
                         else:
                             ss +=" [blue]O[/blue] "
                 else:
                     if wall_a[(i-1) // 2][n] == "Available":
-                        if n==0:
-                            ss += "        [yellow2]|[/yellow2]"
-
-                        elif n!=8:
+                        if n!=8:
                             ss += "   [yellow2]|[/yellow2]"
                         else:
                             ss+="   "
@@ -336,16 +324,11 @@ def generate_table(wall_a, wall_o,red,blue):
         else: 
             for n in range(9):
                 if wall_o[(i - 1) // 2][n] == "Available":
-                    if n==0:
-                        ss += f"[dark_green]{(i+1)//2}.[/dark_green]   [yellow2]——-[/yellow2]o"
-
-                    elif n!=8:  
+                    if n!=8:  
                         ss += "[yellow2]——-[/yellow2]o"
                     else:
                         ss += "[yellow2]——-[/yellow2]"
                 else:
-                    if n==0:
-                        ss += f"[dark_green]{(i+1)//2}.[/dark_green]   [orange3]——-[/orange3]o"
                     if n!=8:
                         ss += "[orange3]——-[/orange3]o"
                     else:
