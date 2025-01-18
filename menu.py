@@ -58,3 +58,34 @@ else:
 
     user_names[user]["email"] = email
     save_to_file(user_names)
+
+    #Leaderboard
+
+    best=dict()
+for i in range(1,4):
+    best[i]=[]
+scores=[]
+for key in dict1.keys():
+    scores.append((key,dict1[key]["W"],dict1[key]["L"]))
+    
+scores=sorted(scores,key=lambda x:x[1],reverse=True)
+
+ctc=1 
+index=0
+current_val=scores[0][1]
+while ctc!=4 and index<len(dict1.keys()):
+    if scores[index][1]!=current_val:
+        ctc+=1
+        current_val=scores[index][1]
+    if ctc<4:
+        best[ctc].append(scores[index][0])
+        best[ctc].append(f"{scores[index][1]}W")
+        best[ctc].append(f"{scores[index][2]}L")
+    index+=1
+
+
+for i in best.keys():
+    print(i,end=" : ")
+    for j in best[i]:
+        print(j,end=" ")
+    print()
