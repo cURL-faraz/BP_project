@@ -1,12 +1,21 @@
 from rich.console import Console
+import json
+import copy
 from rich.theme import Theme
+import time
 import os
+start_time = time.time()
 custom_theme = Theme({"success": "green", "error":"red"})
 console = Console(theme=custom_theme)
 def clear():
     os.system('cls||clear')
 clear()
-def run (red,blue,wall_a,wall_o,neighborhood):
+def endtime (start_time):
+    end_time = time.time()
+    
+
+    print (f"{end_time - start_time}.2f")
+def run (red,blue,wall_a,wall_o,neighborhood,redwall,bluewall,usedcenter_a,usedcenter_o,usedcenter,start_time):
     r=True
     x=0
     while r:
@@ -14,10 +23,15 @@ def run (red,blue,wall_a,wall_o,neighborhood):
         if x%2==0:
             while True:
                 b=0
+                if blue[0]==1:
+                    r=False
+                    break
                 a=input("player1: ")
                 if a=='q':
                     r=False
+                    endtime(start_time)
                     break
+                
                 if a=='m':
                     while True:
                         m=input("enter direction: ")
@@ -29,19 +43,23 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                             b+=1
                             break
                         if t==None:
-                            console.print("invalid durection",style="error")
+                            console.print("invalid direction",style="error") 
                             break
                     if b==1:
                         b=0
                         break
                 if a=="w":
-                    while True:
+                    print(f"your remaining number of walls: {redwall}")
+                    while redwall>0:
                         c=0
                         w=list(input("enter centr of the wall and its state(enter horizontal or vertical),such as (1,2,v): ").split(","))
-                        if w[-1]=="v":
-                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"v"):
+                        centers = [(w[0],w[1])]
+                        if w[-1]=="h":
+                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"h",usedcenter,usedcenter_a,usedcenter_o):
+                                remove_neighborhood(neighborhood,int(w[0]),int(w[1]),"h")
                                 block_wall_o(wall_o,int(w[0]),int(w[1]))
-                                # clear()
+                                redwall-=1
+                                clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
@@ -49,10 +67,12 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                             else:
                                 console.print("invalid wall",style="error")
                                 break
-                        if w[-1]=="h":
-                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"h"):
+                        if w[-1]=="v":
+                            if checkwall(neighborhood,"blue",tuple(blue),int(w[0]),int(w[1]),"v",usedcenter,usedcenter_a,usedcenter_o):
+                                remove_neighborhood(neighborhood,int(w[0]),int(w[1]),"v")
                                 block_wall_a(wall_a,int(w[0]),int(w[1]))
-                                # clear()
+                                redwall-=1
+                                clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
                                 x+=1
                                 c+=1
@@ -67,9 +87,15 @@ def run (red,blue,wall_a,wall_o,neighborhood):
         if x%2!=0:
             while True:
                 b=0
+                c=0
+                if red[0]==9:
+                    r=False
+                    break
                 a=input("player2: ")
                 if a=='q':
                     r=False
+                    
+                    endtime(start_time)
                     break
                 if a=='m':
                     while True:
@@ -88,25 +114,29 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                         b=0
                         break
                 if a=="w":
-                    while True:
-                        c=0
+                    print(f"your remaining number of walls: {bluewall}")
+                    while bluewall>0:
                         w=list(input("enter centr of the wall and its state(enter horizontal or vertical),such as (1,2,v): ").split(","))
-                        if w[-1]=="v":
-                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"v"):
+                        if w[-1]=="h":
+                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"h",usedcenter,usedcenter_a,usedcenter_o):
+                                remove_neighborhood(neighborhood,int(w[0]),int(w[1]),"h")
                                 block_wall_o(wall_o,int(w[0]),int(w[1]))
-                                # clear()
+                                clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
+                                bluewall-=1
                                 x+=1
                                 c+=1
                                 break
                             else:
                                 console.print("invalid wall",style="error")
                                 break
-                        if w[-1]=="h":
-                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"h"):
+                        if w[-1]=="v":
+                            if checkwall(neighborhood,"red",tuple(red),int(w[0]),int(w[1]),"v",usedcenter,usedcenter_a,usedcenter_o):
+                                remove_neighborhood(neighborhood,int(w[0]),int(w[1]),"v")
                                 block_wall_a(wall_a,int(w[0]),int(w[1]))
-                                # clear()
+                                clear()
                                 console.print(generate_table(wall_a, wall_o,red,blue))
+                                bluewall-=1
                                 x+=1
                                 c+=1
                                 break
@@ -116,8 +146,6 @@ def run (red,blue,wall_a,wall_o,neighborhood):
                     if c==1:
                         c=0
                         break
-                    
-
 def block_wall_a(wall_a : list,x_center,y_center):
     if x_center <= 9 and y_center <= 9 :
         wall_a[x_center-1][y_center-1]="Blocked"
@@ -129,124 +157,76 @@ def block_wall_o(wall_o : list,x_center,y_center):
         wall_o[x_center-1][y_center]="Blocked"
         return(wall_o)
 def move(s,k,move,wall_a,wall_o):
-    if move =="u" and wall_o[s[0]-2][s[1]-1]=="Available" and (s[1]!=k[1]or (s[1]==k[1] and s[0]!=k[0]+1)):
+    if move =="u"and (1<s[0]<=9) and wall_o[s[0]-2][s[1]-1]=="Available" and (s[1]!=k[1] or (s[1]==k[1] and s[0]!=k[0]+1)) :
         s[0]-=1
-        if (s[0]>9 or s[0]<1):
-            return None
-        else:
-            return(s)
-    if move =="u" and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]+1):
+        return(s)
+    if move =="u" and (2<s[0]<=9) and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]+1) :
         s[0]-=2
-        if (s[0]>9 or s[0]<1):
-            return None
-        else:
-            return(s)
-    if move =="d" and wall_o[s[0]-1][s[1]-1]=="Available" and (s[1]!=k[1]or (s[1]==k[1] and s[0]!=k[0]-1)):
+        return(s)
+    if move =="d"and (1<=s[0]<9) and wall_o[s[0]-1][s[1]-1]=="Available" and (s[1]!=k[1]or (s[1]==k[1] and s[0]!=k[0]-1)) :
         s[0]+=1
-        if (s[0]>9 or s[0]<1):
-            return None
-        else:
-            return(s)
-    if move =="d" and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]-1):
+        return(s)
+    if move =="d"and (1<=s[0]<8) and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]-1) :
         s[0]+=2
-        if (s[0]>9 or s[0]<1):
-            return None
-        else:
-            return(s)
-    if move =="r" and wall_a[s[0]-1][s[1]-1]=="Available" and (s[0]!=k[0]or (s[0]==k[0] and s[1]!=k[1]-1)):
+        return(s)
+    if move =="r" and (1<=s[1]<9)and wall_a[s[0]-1][s[1]-1]=="Available" and (s[0]!=k[0]or (s[0]==k[0] and s[1]!=k[1]-1)) :
         s[1]+=1
-        if (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if move =="r" and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1):
+        return(s)
+    if move =="r"and (1<=s[1]<8) and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1) :
         s[1]+=2
-        if (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if move =="l" and wall_a[s[0]-1][s[1]-2]=="Available" and (s[0]!=k[0]or (s[0]==k[0] and s[1]!=k[1]+1)):
+        return(s)
+    if move =="l" and (1<s[1]<=9)and wall_a[s[0]-1][s[1]-2]=="Available" and (s[0]!=k[0]or (s[0]==k[0] and s[1]!=k[1]+1)) :
         s[1]-=1
-        if (s[0]>9 or s[0]<1):
-            return None
-        else:
-            return(s)
-    if move =="l" and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]-3]=="Available" and (s[0]==k[0] and s[1]==k[1]+1):
+        return(s)
+    if move =="l"and (2<s[1]<=9) and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]-3]=="Available" and (s[0]==k[0] and s[1]==k[1]+1) :
         s[1]-=2
-        if (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="ul" or move=="lu") and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Blocked" and wall_a[s[0]-2][s[0]-2]=="Available" and (s[1]==k[1] and s[0]==k[0]+1):
+        return(s)
+    if (move =="ul" or move=="lu")and (1<s[1]<=9 and 1<s[0]<=9) and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Blocked" and wall_a[s[0]-2][s[0]-2]=="Available" and (s[1]==k[1] and s[0]==k[0]+1) :
         s[0]-=1
         s[1]-=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="ur" or move=="ru") and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Blocked" and wall_a[s[0]-2][s[0]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]+1):
+        return(s)
+    if (move =="ur" or move=="ru")and (1<=s[1]<9 and 1<s[0]<=9) and wall_o[s[0]-2][s[1]-1]=="Available" and wall_o[s[0]-3][s[1]-1]=="Blocked" and wall_a[s[0]-2][s[0]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]+1) :
         s[0]-=1
         s[1]+=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="dr" or move=="rd") and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Blocked" and wall_a[s[0]+1][s[0]]=="Available" and (s[1]==k[1] and s[0]==k[0]-1):
+        return(s)
+    if (move =="dr" or move=="rd")and (1<=s[1]<9 and 1<=s[0]<9) and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Blocked" and wall_a[s[0]+1][s[0]]=="Available" and (s[1]==k[1] and s[0]==k[0]-1) :
         s[0]+=1
         s[1]+=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="dl" or move=="ld") and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Blocked" and wall_a[s[0]+1][s[0]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]-1):
+        return(s)
+    if (move =="dl" or move=="ld")and (1<s[1]<=9 and 1<=s[0]<9) and wall_o[s[0]-1][s[1]-1]=="Available" and wall_o[s[0]][s[1]-1]=="Blocked" and wall_a[s[0]+1][s[0]-1]=="Available" and (s[1]==k[1] and s[0]==k[0]-1):
         s[0]+=1
         s[1]-=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="ul" or move=="lu") and wall_a[s[0]-1][s[1]-2]=="Available" and wall_a[s[0]-1][s[1]-3]=="Blocked" and wall_o[s[0]-2][s[1]-2]=="Available" and (s[0]==k[0] and s[1]==k[1]+1): 
+        return(s)
+    if (move =="ul" or move=="lu")and (1<s[1]<=9 and 1<s[0]<=9) and wall_a[s[0]-1][s[1]-2]=="Available" and wall_a[s[0]-1][s[1]-3]=="Blocked" and wall_o[s[0]-2][s[1]-2]=="Available" and (s[0]==k[0] and s[1]==k[1]+1) : 
         s[0]-=1
         s[1]-=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="dl" or move=="ld") and wall_a[s[0]-1][s[1]-2]=="Available" and wall_a[s[0]-1][s[1]-3]=="Blocked" and wall_o[s[0]-1][s[1]-2]=="Available" and (s[0]==k[0] and s[1]==k[1]+1):
+        return(s)
+    if (move =="dl" or move=="ld")and (1<s[1]<=9 and 1<=s[0]<9) and wall_a[s[0]-1][s[1]-2]=="Available" and wall_a[s[0]-1][s[1]-3]=="Blocked" and wall_o[s[0]-1][s[1]-2]=="Available" and (s[0]==k[0] and s[1]==k[1]+1)  :
         s[0]+=1
         s[1]-=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="dr" or move=="rd") and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Blocked" and wall_o[s[0]-1][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1):
+        return(s)
+    if (move =="dr" or move=="rd") and (1<=s[1]<9 and 1<=s[0]<9)and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Blocked" and wall_o[s[0]-1][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1) :
         s[0]+=1
         s[1]+=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
-    if (move =="ur" or move=="ru") and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Blocked" and wall_o[s[0]-2][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1):
+        return(s)
+    if (move =="ur" or move=="ru")and (1<=s[1]<9 and 1<s[0]<=9) and wall_a[s[0]-1][s[1]-1]=="Available" and wall_a[s[0]-1][s[1]]=="Blocked" and wall_o[s[0]-2][s[1]]=="Available" and (s[0]==k[0] and s[1]==k[1]-1) :
         s[0]-=1
         s[1]+=1
-        if (s[0]>9 or s[0]<1) or (s[1]>9 or s[1]<1):
-            return None
-        else:
-            return(s)
+        return(s)
 def remove_neighborhood(neighborhood,x_center,y_center,state):
-    if state=="v":
-        print((x_center,y_center))
-        print(neighborhood[(x_center,y_center)])
-        print((x_center+1,y_center))
+    if state=="h":
         if (x_center+1,y_center) in neighborhood[(x_center,y_center)]:
             neighborhood[(x_center,y_center)].remove((x_center+1,y_center))
+
         if (x_center,y_center) in neighborhood[(x_center+1,y_center)]:    
             neighborhood[(x_center+1,y_center)].remove((x_center,y_center))
+
         if (x_center+1,y_center+1) in neighborhood[(x_center,y_center+1)]:
             neighborhood[(x_center,y_center+1)].remove((x_center+1,y_center+1))
+
         if (x_center,y_center+1) in neighborhood[(x_center+1,y_center+1)]:
             neighborhood[(x_center+1,y_center+1)].remove((x_center,y_center+1))
-    if state=="h":
+    if state=="v":
         if (x_center,y_center+1) in neighborhood[(x_center,y_center)]:
             neighborhood[(x_center,y_center)].remove((x_center,y_center+1))
         if (x_center,y_center) in neighborhood[(x_center,y_center+1)]:
@@ -265,21 +245,32 @@ def dfs(start, target, visited,neighborhood_c):
             if dfs(neighbor, target, visited,neighborhood_c):
                 return True
     return False
-def checkwall(neighborhood,enemycolor,positon,x_center,y_center,state):
-    neighborhood_c=neighborhood.copy()
+def checkwall(neighborhood,enemycolor,positon,x_center,y_center,state,usedcenter,usedcenter_a,usedcenter_o):
+    neighborhood_c=copy.deepcopy(neighborhood)
     remove_neighborhood(neighborhood_c,x_center,y_center,state)
+    if state == "v":
+        if not((x_center,y_center) in usedcenter) and not((x_center+1,y_center) in usedcenter_a) and not((x_center-1,y_center) in usedcenter_a):
+            center=(x_center,y_center)
+            usedcenter.append(center);usedcenter_a.append(center)
+        else:
+            return False
+    if state == "h":
+        if not((x_center,y_center) in usedcenter) and not((x_center,y_center+1) in usedcenter_o) and not((x_center,y_center-1) in usedcenter_o):
+            center=(x_center,y_center)
+            usedcenter.append(center);usedcenter_o.append(center)        
+        else:
+            return False
     if enemycolor == "red":
         visited = set()
         for i in range(1,10):
             if dfs(positon,(9,i),visited,neighborhood_c):
-                remove_neighborhood(neighborhood,x_center,y_center,state)
                 return True
         return False
+    
     if enemycolor=="blue":
         visited = set()
         for i in range(1,10):
             if dfs(positon,(1,i),visited,neighborhood_c):
-                neighborhood=neighborhood_c
                 return True
         return False
 def generate_table(wall_a, wall_o,red,blue):
@@ -355,6 +346,17 @@ for i in range(1, 10):
                 neighbors.append((ni, nj))
         neighborhood[(i, j)] = neighbors
 console.print(generate_table(wall_a, wall_o,red,blue))
-run(red,blue,wall_a,wall_o,neighborhood)
-clear()
+redwall=10;bluewall=10;usedcenter_a=[];usedcenter_o=[];usedcenter=[]
+run(red,blue,wall_a,wall_o,neighborhood,redwall,bluewall,usedcenter_a,usedcenter_o,usedcenter,start_time)
 
+if red[0]==9:
+    print("player1 wins")
+    endtime(start_time)
+
+
+
+
+
+if blue[0]==1:
+    print("player2 wins")
+    endtime(start_time)
