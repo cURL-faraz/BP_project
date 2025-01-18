@@ -61,7 +61,9 @@ else:
 
     #Leaderboard
 
-    best=dict()
+with open("C:\\pro\\boardfile.json", "r") as file:
+    dict1=json.load(file)
+best=dict()
 for i in range(1,4):
     best[i]=[]
 scores=[]
