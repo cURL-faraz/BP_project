@@ -60,6 +60,7 @@ else:
     save_to_file(user_names)
 
     #Leaderboard
+    
 
 with open("C:\\pro\\boardfile.json", "r") as file:
     dict1=json.load(file)
