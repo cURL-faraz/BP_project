@@ -46,3 +46,15 @@ if user in user_names:
 else:
     password = input("password: ")
     user_names[user] = {"user": user, "password": hasher(password)}    
+
+    def check(email):
+        pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        return re.match(pattern, email)
+
+    email = input("email: ")
+    while not check(email):
+        console.print("Enter a valid email address.", style="error")
+        email = input("email: ")
+
+    user_names[user]["email"] = email
+    save_to_file(user_names)
